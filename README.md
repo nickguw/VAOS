@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/nickguw/VAOS.svg?branch=master)](https://travis-ci.org/nickguw/VAOS)
 ![alt text](https://i.imgur.com/53yyaeT.png)
 
 # About
