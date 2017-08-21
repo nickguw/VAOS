@@ -44,6 +44,7 @@ class smartCARS extends Controller
         $pirep->route = "NOT SUPPORTED";
         $pirep->status = 0;
         $pirep->landingrate = $request->input('landingrate');
+        $pirep->flighttime = $request->input('flighttime');
 
         // Auto Accept System
         if (env('VAOS_AA_ENABLED')) {
@@ -78,12 +79,12 @@ class smartCARS extends Controller
         if ($request->query('format') == 'phpVMS')
         {
             // well shoot, we got a legacy ACARS client. Let's sterilize the data and format the input.
-            $report['user'] = User::find($request->input('pilotid'));
+            $report['user'] = User::find($request->input('pilotid'))->id;
             $report['user_id'] = $request->input('pilotid');
             // split the flight string the phpVMS way into Airline Code and Flight Number.
             // Why they did this is beyond me. Foreign keys are another story.....
             // phpVMS is a pretty little princess
-            $report['bid'] = self::getProperFlightNum($request->input('flightnum'), $request->input('pilotid'));
+            $report['bid'] = self::getProperFlightNum($request->input('flightnum'), $request->input('pilotid'))->id;
             //dd($report['bid']);
             // phpVMS sends the aircraft ID from database. Let's use it to our advantage.
             //$report['aircraft'] = Aircraft::where('registration', $request->input('registration'))->first();
@@ -93,13 +94,13 @@ class smartCARS extends Controller
             $report['heading'] = $request->input('heading');
             $report['altitude'] = $request->input('alt');
             $report['groundspeed'] = $request->input('gs');
+            $report['distremain'] = $request->input('distremain');
+            $report['timeremaining'] = $request->input('timeremaining');
+            $report['online'] = $request->input('online');
             /*
             'deptime'
             'arrtime'
             'route'
-            'distremain'
-            'timeremaining'
-            'phasedetail'
             */
             $report['phase'] = $request->input('phasedetail');
             $report['client'] = $request->input('client');
@@ -111,7 +112,7 @@ class smartCARS extends Controller
             ]);
         }
         // find if the row exists
-        $rpt = ACARSData::firstOrNew(['bid_id' => $report['bid']]);
+        $rpt = ACARSData::firstOrNew(['bid_id' => $report['bid'], 'user_id' => $report['user']]);
         $rpt->user()->associate($report['user']);
         $rpt->bid()->associate($report['bid']);
         $rpt->lat = $report['lat'];
@@ -121,6 +122,9 @@ class smartCARS extends Controller
         $rpt->groundspeed = $report['groundspeed'];
         $rpt->phase = $report['phase'];
         $rpt->client = $report['client'];
+        $rpt->distremain =  $report['distremain'];
+        $rpt->timeremaining = $report['timeremaining'];
+        $rpt->online =  $report['online'];
         $rpt->save();
         return response()->json([
             'status' => 200
